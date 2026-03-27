@@ -1,0 +1,257 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium dark — page / surfaces */
+    --color-canvas: #0b1020;
+    --color-surface: #11182a;
+    --color-card: #162033;
+    --color-elevated: #1a2740;
+    --color-input: #0f1728;
+    --color-line: #24324a;
+    --color-line-soft: rgb(36 50 74 / 0.45);
+    --color-ink: #e8eef8;
+    --color-ink-muted: #93a4bd;
+    --color-accent: #6d7cff;
+    --color-accent-hover: #7c8aff;
+    --color-accent-muted: rgb(109 124 255 / 0.14);
+    --color-success: #22c55e;
+    --color-success-muted: rgb(34 197 94 / 0.12);
+    --color-danger: #ef4444;
+    --color-danger-muted: rgb(239 68 68 / 0.1);
+    --color-dup-bg: rgb(239 68 68 / 0.09);
+    --color-dup-row: rgb(239 68 68 / 0.045);
+    --sticky-dup: color-mix(in oklab, var(--color-card) 78%, var(--color-danger) 22%);
+    --color-dup-glow: rgb(239 68 68 / 0.35);
+    --shadow-card: 0 0 0 1px rgb(36 50 74 / 0.5), 0 4px 24px -8px rgb(0 0 0 / 0.55),
+      0 24px 48px -24px rgb(0 0 0 / 0.4);
+    --shadow-float: 0 8px 32px -12px rgb(0 0 0 / 0.65), 0 0 0 1px rgb(36 50 74 / 0.4);
+    --radius-lg: 14px;
+    --radius-md: 10px;
+    --radius-sm: 8px;
+    --duration-ui: 140ms;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  html {
+    @apply antialiased;
+    color: var(--color-ink);
+    background-color: var(--color-canvas);
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background-color: var(--color-canvas);
+    background-image:
+      radial-gradient(ellipse 100% 70% at 50% -25%, rgb(109 124 255 / 0.12), transparent 52%),
+      radial-gradient(ellipse 55% 45% at 100% 0%, rgb(109 124 255 / 0.06), transparent 50%),
+      radial-gradient(ellipse 50% 40% at 0% 100%, rgb(34 197 94 / 0.04), transparent 45%);
+  }
+
+  ::selection {
+    background-color: rgb(109 124 255 / 0.35);
+    color: var(--color-ink);
+  }
+}
+
+@layer components {
+  .surface-card {
+    background-color: var(--color-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-line-soft);
+  }
+
+  .surface-hero {
+    background: linear-gradient(
+      145deg,
+      rgb(22 32 51 / 0.95) 0%,
+      rgb(17 24 42 / 0.98) 48%,
+      rgb(15 23 40 / 0.99) 100%
+    );
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-line-soft);
+  }
+
+  .input-crm {
+    @apply w-full px-3 text-[13px] leading-snug shadow-none outline-none;
+    border-radius: var(--radius-sm);
+    transition-property: border-color, box-shadow, background-color, transform;
+    transition-timing-function: var(--ease-out);
+    transition-duration: var(--duration-ui);
+    background-color: var(--color-input);
+    border: 1px solid transparent;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+    color: var(--color-ink);
+  }
+  .input-crm::placeholder {
+    color: var(--color-ink-muted);
+    opacity: 0.45;
+  }
+  .input-crm:hover:not(:focus) {
+    background-color: rgb(15 23 40 / 0.92);
+  }
+  .input-crm:focus {
+    background-color: var(--color-input);
+    border-color: rgb(109 124 255 / 0.45);
+    box-shadow: 0 0 0 3px rgb(109 124 255 / 0.2), inset 0 1px 0 rgb(255 255 255 / 0.05);
+    outline: none;
+  }
+
+  .input-crm-dup {
+    @apply input-crm;
+    background-color: var(--color-dup-bg);
+    border-color: rgb(239 68 68 / 0.35);
+    box-shadow: 0 0 0 1px rgb(239 68 68 / 0.2), inset 0 0 12px rgb(239 68 68 / 0.06);
+  }
+  .input-crm-dup:focus {
+    border-color: rgb(239 68 68 / 0.55);
+    box-shadow: 0 0 0 3px rgb(239 68 68 / 0.18), 0 0 20px -6px var(--color-dup-glow);
+    outline: none;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-[13px] font-semibold text-white outline-none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(180deg, var(--color-accent-hover) 0%, var(--color-accent) 100%);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.12) inset, 0 4px 16px -4px rgb(109 124 255 / 0.55);
+    transition: filter, transform, box-shadow;
+    transition-duration: var(--duration-ui);
+    transition-timing-function: var(--ease-out);
+  }
+  .btn-primary:hover {
+    filter: brightness(1.06);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.14) inset, 0 6px 22px -4px rgb(109 124 255 / 0.6);
+  }
+  .btn-primary:focus-visible {
+    box-shadow: 0 0 0 3px rgb(109 124 255 / 0.35), 0 4px 16px -4px rgb(109 124 255 / 0.55);
+  }
+  .btn-primary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 text-[13px] font-semibold outline-none;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-elevated);
+    color: var(--color-ink);
+    border: 1px solid var(--color-line-soft);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
+    transition: background-color, border-color, color, transform;
+    transition-duration: var(--duration-ui);
+    transition-timing-function: var(--ease-out);
+  }
+  .btn-secondary:hover {
+    background-color: rgb(26 39 64 / 0.95);
+    border-color: rgb(109 124 255 / 0.25);
+    color: var(--color-ink);
+  }
+  .btn-secondary:focus-visible {
+    box-shadow: 0 0 0 3px rgb(109 124 255 / 0.22);
+  }
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[12px] font-medium outline-none;
+    border-radius: var(--radius-sm);
+    color: var(--color-ink-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    transition: background-color, color, border-color;
+    transition-duration: var(--duration-ui);
+    transition-timing-function: var(--ease-out);
+  }
+  .btn-ghost:hover {
+    background-color: rgb(109 124 255 / 0.08);
+    color: var(--color-ink);
+  }
+  .btn-ghost:focus-visible {
+    box-shadow: 0 0 0 2px rgb(109 124 255 / 0.3);
+  }
+
+  .btn-danger-soft {
+    @apply inline-flex items-center justify-center px-2.5 py-1.5 text-[12px] font-semibold outline-none;
+    border-radius: var(--radius-sm);
+    color: rgb(254 202 202);
+    background-color: var(--color-danger-muted);
+    border: 1px solid rgb(239 68 68 / 0.22);
+    transition: background-color, border-color;
+    transition-duration: var(--duration-ui);
+  }
+  .btn-danger-soft:hover {
+    background-color: rgb(239 68 68 / 0.16);
+    border-color: rgb(239 68 68 / 0.35);
+  }
+
+  .chip-metric {
+    @apply inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px] font-medium;
+    background-color: rgb(15 23 40 / 0.65);
+    color: var(--color-ink-muted);
+    border: 1px solid var(--color-line-soft);
+    transition: border-color, background-color;
+    transition-duration: var(--duration-ui);
+  }
+  .chip-metric strong {
+    @apply tabular-nums font-semibold;
+    color: var(--color-ink);
+  }
+
+  .segmented {
+    @apply inline-flex p-0.5;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-input);
+    border: 1px solid var(--color-line-soft);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.2);
+  }
+  .segmented button {
+    @apply rounded-[6px] px-3 py-1.5 text-[12px] font-semibold outline-none;
+    color: var(--color-ink-muted);
+    transition: background-color, color, box-shadow;
+    transition-duration: var(--duration-ui);
+    transition-timing-function: var(--ease-out);
+  }
+  .segmented button[data-active='true'] {
+    background-color: var(--color-elevated);
+    color: var(--color-accent-hover);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 0.25), 0 0 0 1px rgb(109 124 255 / 0.2);
+  }
+  .segmented button:not([data-active='true']):hover {
+    color: var(--color-ink);
+  }
+  .segmented button:focus-visible {
+    box-shadow: 0 0 0 2px rgb(109 124 255 / 0.35);
+  }
+
+  .table-scroll-fade {
+    mask-image: linear-gradient(to bottom, black 0%, black calc(100% - 48px), transparent 100%);
+  }
+
+  .crm-checkbox {
+    @apply h-4 w-4 cursor-pointer rounded border-0 outline-none;
+    accent-color: var(--color-accent);
+    background-color: var(--color-input);
+    box-shadow: inset 0 0 0 1px var(--color-line-soft);
+    transition: box-shadow, transform;
+    transition-duration: var(--duration-ui);
+  }
+  .crm-checkbox:hover {
+    box-shadow: inset 0 0 0 1px rgb(109 124 255 / 0.35);
+  }
+  .crm-checkbox:focus-visible {
+    box-shadow: 0 0 0 3px rgb(109 124 255 / 0.28);
+  }
+
+  .help-chip {
+    @apply inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-medium leading-snug;
+    background-color: var(--color-accent-muted);
+    color: rgb(199 206 255);
+    border: 1px solid rgb(109 124 255 / 0.22);
+  }
+}
