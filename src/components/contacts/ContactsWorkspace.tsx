@@ -13,7 +13,7 @@ import { columnIndex, COLUMN_LABELS, COLUMN_ORDER, type DataColumnKey } from '..
 import { useContactsDerived } from '../../hooks/contacts/useContactsDerived';
 import { useContactsPersistence } from '../../hooks/contacts/useContactsPersistence';
 import { parseClipboardInput } from '../../lib/clipboard/parseClipboardInput';
-import { getSupabase, isSupabaseConfigured } from '../../lib/supabase/client';
+import { getSupabase, getSupabaseBootstrapInfo, isSupabaseConfigured } from '../../lib/supabase/client';
 import { downloadTextFile, exportContactsToCsv, importContactsFromDelimitedText, importContactsFromXlsxFile } from '../../lib/importExport';
 import type { ApplyPasteGridOptions } from '../../lib/paste/applyPasteGrid';
 import { applyPasteGrid } from '../../lib/paste/applyPasteGrid';
@@ -83,6 +83,8 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [bulkImportSnapshot, setBulkImportSnapshot] = useState<BulkImportSnapshot | null>(null);
   const [dupPanelOpen, setDupPanelOpen] = useState(false);
+  /** Ошибка первичной загрузки / refetch при включённом Supabase (не смешиваем с локальной фиктивной строкой). */
+  const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
 
   const rowsRef = useRef(rows);
   rowsRef.current = rows;
@@ -101,9 +103,17 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
         await insertContact(row);
         data = [row];
       }
+      setCloudSyncError(null);
       setRows(data);
-    } catch {
-      toast.push({ variant: 'error', title: 'Не удалось обновить таблицу' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
+      console.error('[ContactsWorkspace] refetchContacts', e);
+      setCloudSyncError(msg);
+      toast.push({
+        variant: 'error',
+        title: 'Не удалось обновить таблицу',
+        body: msg,
+      });
     }
   }, [toast]);
 
@@ -133,16 +143,21 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
           await insertContact(row);
           data = [row];
         }
+        setCloudSyncError(null);
         setRows(data);
       } catch (e) {
         if (!cancelled) {
-          console.error(e);
+          console.error('[ContactsWorkspace] initial cloud load', e);
+          const msg = e instanceof Error ? e.message : 'Неизвестная ошибка';
+          setCloudSyncError(
+            `${msg} Проверьте таблицу contacts, RLS и ключи в Cloudflare Pages (переменные должны быть заданы на этапе сборки).`,
+          );
           toast.push({
             variant: 'error',
             title: 'Не удалось загрузить контакты из облака',
-            body: 'Проверьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY.',
+            body: 'Проверьте VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY и SQL-скрипт в Supabase.',
           });
-          setRows([createEmptyRow({ owner: readStoredUserName() })]);
+          setRows([]);
         }
       } finally {
         if (!cancelled) setHydrated(true);
@@ -173,7 +188,7 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
               const next = prev.filter((r) => r.id !== oldId);
               if (next.length === 0) {
                 queueMicrotask(() => void refetchContactsRef.current());
-                return [createEmptyRow({ owner: readStoredUserName() })];
+                return [];
               }
               return next;
             }
@@ -191,7 +206,18 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
           });
         },
       )
-      .subscribe();
+      .subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          console.info('[Supabase Realtime] Подписка на public.contacts активна');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error(
+            '[Supabase Realtime]',
+            status,
+            err,
+            'Проверьте publication supabase_realtime для таблицы contacts (см. supabase-schema.sql).',
+          );
+        }
+      });
 
     return () => {
       void sb.removeChannel(channel);
@@ -404,7 +430,10 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
     }
     setRows((prev) => [...prev, row]);
     void insertContact(row)
-      .then((inserted) => setRows((prev) => prev.map((r) => (r.id === row.id ? inserted : r))))
+      .then((inserted) => {
+        setCloudSyncError(null);
+        setRows((prev) => prev.map((r) => (r.id === row.id ? inserted : r)));
+      })
       .catch(() => {
         setRows((prev) => prev.filter((r) => r.id !== row.id));
         toast.push({ variant: 'error', title: 'Строка не создана в облаке' });
@@ -637,10 +666,33 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
           className="shrink-0 rounded-[14px] border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-[13px] leading-relaxed text-amber-100/95 shadow-glow sm:px-5"
         >
           <strong className="font-semibold text-amber-50">Локальный режим.</strong> Данные хранятся только в этом браузере
-          (IndexedDB / localStorage), общая таблица для всех пользователей не используется. Для облака задайте при сборке{' '}
-          <code className="rounded bg-canvas/80 px-1 py-0.5 font-mono text-[11px] text-ink-muted">VITE_SUPABASE_URL</code> и{' '}
-          <code className="rounded bg-canvas/80 px-1 py-0.5 font-mono text-[11px] text-ink-muted">VITE_SUPABASE_ANON_KEY</code>{' '}
-          (например в Cloudflare Pages → Settings → Environment variables) и пересоберите проект.
+          (IndexedDB / localStorage), общая таблица для всех пользователей не используется.
+          <span className="mt-2 block text-amber-100/85">{getSupabaseBootstrapInfo().message}</span>
+          <span className="mt-2 block text-[12px] text-amber-100/70">
+            В Cloudflare Pages задайте <code className="rounded bg-canvas/80 px-1 py-0.5 font-mono text-[11px]">VITE_SUPABASE_URL</code> и{' '}
+            <code className="rounded bg-canvas/80 px-1 py-0.5 font-mono text-[11px]">VITE_SUPABASE_ANON_KEY</code> для среды{' '}
+            <strong className="font-medium">Production</strong> (и при необходимости Preview) и выполните новый деплой — иначе в бандл не попадут
+            ключи.
+          </span>
+        </div>
+      ) : null}
+      {isSupabaseConfigured() && cloudSyncError ? (
+        <div
+          role="alert"
+          className="flex shrink-0 flex-col gap-3 rounded-[14px] border border-red-500/40 bg-red-950/35 px-4 py-3 text-[13px] leading-relaxed text-red-100/95 shadow-glow sm:flex-row sm:items-center sm:justify-between sm:px-5"
+        >
+          <div>
+            <strong className="font-semibold text-red-50">Облако недоступно.</strong>{' '}
+            <span className="text-red-100/90">Данные с сервера не загружены; правки ниже не синхронизированы, пока не восстановится связь.</span>
+            <span className="mt-1.5 block font-mono text-[11px] text-red-200/80">{cloudSyncError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => void refetchContacts()}
+            className="shrink-0 rounded-lg border border-red-400/50 bg-red-900/40 px-4 py-2 text-[12px] font-semibold text-red-50 transition-colors hover:bg-red-900/55"
+          >
+            Повторить загрузку
+          </button>
         </div>
       ) : null}
       <WorkspaceHero

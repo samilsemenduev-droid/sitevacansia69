@@ -40,14 +40,13 @@ create trigger contacts_set_updated_at
 
 alter table public.contacts enable row level security;
 
--- Удалите старые политики с теми же именами, если перезапускаете скрипт
 drop policy if exists "contacts_anon_all" on public.contacts;
 drop policy if exists "contacts_authenticated_all" on public.contacts;
 
 -- ---------------------------------------------------------------------------
--- RLS: «быстрый старт» — полный доступ для anon и authenticated.
--- Любой с URL проекта и anon-ключом из бандла может читать/писать таблицу.
--- Для продакшена: заменить на Supabase Auth + политики по auth.uid().
+-- RLS: полный доступ для anon и authenticated (общая рабочая таблица без Auth).
+-- Любой с URL проекта и anon-ключом из бандла может читать/писать.
+-- Для продакшена позже: Supabase Auth + политики по auth.uid().
 -- ---------------------------------------------------------------------------
 create policy "contacts_anon_all"
   on public.contacts
@@ -64,6 +63,14 @@ create policy "contacts_authenticated_all"
   with check (true);
 
 -- Realtime: postgres_changes в клиенте требует таблицу в publication supabase_realtime.
-alter publication supabase_realtime add table public.contacts;
--- Проверка: Dashboard → Database → Publications → supabase_realtime — список должен содержать public.contacts.
--- Ошибка «already member» при повторном запуске скрипта — нормально.
+do $pub$
+begin
+  alter publication supabase_realtime add table public.contacts;
+exception
+  when duplicate_object then
+    null;
+end
+$pub$;
+-- Если появится ошибка «already member of publication» — таблица уже в publication, это нормально.
+
+-- Проверка: Dashboard → Database → Publications → supabase_realtime — в списке есть public.contacts.

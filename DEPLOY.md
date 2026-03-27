@@ -49,6 +49,27 @@
    - **Build output directory**: `dist`
    - **Root directory**: `/` (корень репозитория, если проект в корне).
 
+### Ошибка «Failed: error occurred while fetching repository»
+
+Cloudflare не может прочитать репозиторий у GitHub — почти всегда это **доступ GitHub App**, а не локальная сборка.
+
+1. На GitHub: **Settings** → **Applications** → **Installed GitHub Apps** → найдите **Cloudflare Pages** → **Configure**.
+2. В блоке **Repository access** выберите **All repositories** (или явно отметьте нужный репозиторий) → **Save**.
+3. В [Cloudflare Dashboard](https://dash.cloudflare.com) откройте проект Pages → при необходимости **Reconnect** к GitHub и заново выберите репозиторий.
+
+Если не помогло: в том же списке приложений GitHub — **Uninstall** для Cloudflare Pages, затем в Cloudflare снова **Connect to Git** и пройдите установку приложения с доступом ко **всем** или к **конкретному** репо.
+
+**Новый репозиторий (если старый «залип» в интеграции):** на GitHub создайте пустой репозиторий (например `site-deploy-fix`), локально:
+
+```bash
+git remote remove origin
+git remote add origin https://github.com/<USER>/<NEW_REPO>.git
+git branch -M main
+git push -u origin main
+```
+
+После этого в Pages подключите **новый** репозиторий.
+
 ### Прямая загрузка (без Git)
 
 1. Заполните **`.env.local`**: `VITE_SUPABASE_URL` и `VITE_SUPABASE_ANON_KEY` (иначе в архиве будет только локальный режим без Supabase).
