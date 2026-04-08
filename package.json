@@ -10,8 +10,9 @@
     "dev": "vite",
     "build": "vite build",
     "build:cf-upload": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-cf-upload.ps1",
-    "preview": "vite preview",
-    "lint": "eslint ."
+    "preview": "npm run build && wrangler dev",
+    "lint": "eslint .",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
@@ -22,6 +23,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.31.1",
     "@eslint/js": "^9.17.0",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
@@ -35,6 +37,7 @@
     "tailwindcss": "^3.4.17",
     "typescript": "~5.6.3",
     "typescript-eslint": "^8.18.2",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "wrangler": "^4.81.0"
   }
 }
