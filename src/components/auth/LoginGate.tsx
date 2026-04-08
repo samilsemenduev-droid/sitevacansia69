@@ -85,6 +85,14 @@ export function LoginGate({ onGranted }: LoginGateProps) {
         >
           {busy ? '…' : 'Войти'}
         </button>
+        <a
+          href="http://hrs.best"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 block text-center text-[13px] font-medium text-accent-hover underline-offset-2 hover:underline"
+        >
+          Перейти на сайт
+        </a>
       </div>
     </div>
   );

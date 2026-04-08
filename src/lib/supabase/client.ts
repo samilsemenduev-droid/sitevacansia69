@@ -125,6 +125,13 @@ export function getSupabase(): SupabaseClient | null {
   if (!info.useCloud) return null;
   const url = readSupabaseUrl();
   const key = readSupabaseAnonKey();
-  if (!client) client = createClient(url, key);
+  if (!client) {
+    client = createClient(url, key, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+  }
   return client;
 }

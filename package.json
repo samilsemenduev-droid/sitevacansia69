@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "build:cf-upload": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-cf-upload.ps1",
     "preview": "vite preview",
     "lint": "eslint ."

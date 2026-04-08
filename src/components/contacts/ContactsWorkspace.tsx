@@ -91,7 +91,7 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
 
   const { duplicateInfo, visibleRows, citySuggestions } = useContactsDerived(rows, search, filter, sort);
 
-  /** Вторичный кэш (LS + IndexedDB); источник правды при Supabase — база. */
+  /** Локальный режим: debounced LS + IndexedDB. При подключённом Supabase хук не пишет в браузер. */
   useContactsPersistence(rows, hydrated);
 
   const refetchContacts = useCallback(async () => {
@@ -214,7 +214,7 @@ export function ContactsWorkspace({ onChangeAccessKey }: ContactsWorkspaceProps)
             '[Supabase Realtime]',
             status,
             err,
-            'Проверьте publication supabase_realtime для таблицы contacts (см. supabase-schema.sql).',
+            'Проверьте publication supabase_realtime для таблицы contacts (см. supabase-setup.sql).',
           );
         }
       });
